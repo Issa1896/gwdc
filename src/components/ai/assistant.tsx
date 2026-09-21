@@ -67,16 +67,30 @@ export function AiAssistant({ productName }: { productName: string }) {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, thinking]);
 
-  const send = (raw?: string) => {
+  const send = async (raw?: string) => {
     const value = (raw ?? input).trim();
     if (!value) return;
     setMessages((prev) => [...prev, { role: "user", content: value }]);
     setInput("");
     setThinking(true);
-    window.setTimeout(() => {
+
+    try {
+      const res = await fetch("/api/v1/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: value, productName }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+      } else {
+        setMessages((prev) => [...prev, { role: "assistant", content: reply(value, productName) }]);
+      }
+    } catch {
       setMessages((prev) => [...prev, { role: "assistant", content: reply(value, productName) }]);
+    } finally {
       setThinking(false);
-    }, 700);
+    }
   };
 
   return (

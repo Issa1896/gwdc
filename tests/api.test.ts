@@ -6,6 +6,7 @@ import { GET as getProducts } from "../src/app/api/v1/products/route";
 import { GET as getProductBySlug } from "../src/app/api/v1/products/[slug]/route";
 import { POST as postTranslate } from "../src/app/api/v1/ai/translate/route";
 import { POST as postFraudCheck } from "../src/app/api/v1/ai/fraud-check/route";
+import { POST as postChat } from "../src/app/api/v1/ai/chat/route";
 import { GET as getProcesses, POST as postProcess } from "../src/app/api/v1/government/processes/route";
 
 describe("Camada de API REST (v1) — Contratos e Endpoints", () => {
@@ -109,5 +110,18 @@ describe("Camada de API REST (v1) — Contratos e Endpoints", () => {
     const created = await resPost.json();
     expect(created.numeroProtocolo).toMatch(/^GW-\d{4}-\d+/);
     expect(created.status).toBe("recebido");
+  });
+
+  it("POST /api/v1/ai/chat responde contextualmente sobre transporte e Crioulo", async () => {
+    const req = new NextRequest("http://localhost:3000/api/v1/ai/chat", {
+      method: "POST",
+      body: JSON.stringify({ message: "Quais são os barcos para Bubaque e Bolama?", productName: "GW Transport" }),
+    });
+    const res = await postChat(req);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.intent).toBe("transport");
+    expect(data.reply).toContain("Bubaque");
+    expect(data.reply).toContain("FCFA");
   });
 });
