@@ -8,6 +8,8 @@ import { POST as postTranslate } from "../src/app/api/v1/ai/translate/route";
 import { POST as postFraudCheck } from "../src/app/api/v1/ai/fraud-check/route";
 import { POST as postChat } from "../src/app/api/v1/ai/chat/route";
 import { GET as getProcesses, POST as postProcess } from "../src/app/api/v1/government/processes/route";
+import { GET as getCitizenServices, POST as postCitizenService } from "../src/app/api/v1/citizen/services/route";
+import { POST as postUssd } from "../src/app/api/v1/citizen/ussd/route";
 
 describe("Camada de API REST (v1) — Contratos e Endpoints", () => {
   it("GET /healthz retorna 200 OK com metadados de liveness", async () => {
@@ -123,5 +125,43 @@ describe("Camada de API REST (v1) — Contratos e Endpoints", () => {
     expect(data.intent).toBe("transport");
     expect(data.reply).toContain("Bubaque");
     expect(data.reply).toContain("FCFA");
+  });
+
+  it("GET & POST /api/v1/citizen/services lista catálogo e solicita serviço", async () => {
+    const resGet = await getCitizenServices();
+    expect(resGet.status).toBe(200);
+    const dataGet = await resGet.json();
+    expect(dataGet.servicos.length).toBeGreaterThan(0);
+
+    const reqPost = new NextRequest("http://localhost:3000/api/v1/citizen/services", {
+      method: "POST",
+      body: JSON.stringify({ servicoId: "srv-01", titularNome: "Bacari Djassi" }),
+    });
+    const resPost = await postCitizenService(reqPost);
+    expect(resPost.status).toBe(201);
+    const dataPost = await resPost.json();
+    expect(dataPost.codigoAcompanhamento).toMatch(/^PED-\d{4}-\d+/);
+  });
+
+  it("POST /api/v1/citizen/ussd processa comandos do protocolo telecom", async () => {
+    const reqRoot = new NextRequest("http://localhost:3000/api/v1/citizen/ussd", {
+      method: "POST",
+      body: JSON.stringify({ text: "*123#" }),
+    });
+    const resRoot = await postUssd(reqRoot);
+    expect(resRoot.status).toBe(200);
+    const dataRoot = await resRoot.json();
+    expect(dataRoot.action).toBe("CON");
+    expect(dataRoot.response).toContain("Certidões");
+
+    const reqOption = new NextRequest("http://localhost:3000/api/v1/citizen/ussd", {
+      method: "POST",
+      body: JSON.stringify({ text: "4" }),
+    });
+    const resOption = await postUssd(reqOption);
+    expect(resOption.status).toBe(200);
+    const dataOption = await resOption.json();
+    expect(dataOption.action).toBe("END");
+    expect(dataOption.response).toContain("Processos");
   });
 });
