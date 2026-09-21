@@ -1,0 +1,75 @@
+import type { HealthState } from "./types";
+import { daysAgo } from "./types";
+
+export const SEED_VERSION = 1;
+
+export const HEALTH_SEED: HealthState = {
+  pacientes: [
+    { id: "pac-1", niss: "GW-PAC-0004102", name: "Mariama Sanhá", sexo: "F", idade: 28, sangue: "O+", localidade: "Bissau — Bandim", unidade: "Hospital Nacional Simão Mendes", cronicas: ["Anemia crónica"], alergias: ["Penicilina"], seguimento: "seguimento" },
+    { id: "pac-2", niss: "GW-PAC-0004103", name: "Bacar Sanó", sexo: "M", idade: 52, sangue: "B+", localidade: "Bissau — Mindara", unidade: "Centro de Saúde de Bissau", cronicas: ["Hipertensão", "Diabetes tipo 2"], alergias: [], seguimento: "critico" },
+    { id: "pac-3", niss: "GW-PAC-0004104", name: "Adja Camará", sexo: "F", idade: 6, sangue: "A+", localidade: "Bissau — Alto Crim", unidade: "Centro de Saúde de Bissau", cronicas: [], alergias: [], seguimento: "estavel" },
+    { id: "pac-4", niss: "GW-PAC-0004105", name: "Fodé Embaló", sexo: "M", idade: 34, sangue: "O-", localidade: "Bafatá", unidade: "Hospital Regional de Bafatá", cronicas: ["Malária recorrente"], alergias: [], seguimento: "seguimento" },
+    { id: "pac-5", niss: "GW-PAC-0004106", name: "Dulce Mendes", sexo: "F", idade: 61, sangue: "AB+", localidade: "Bissau — Penha", unidade: "Hospital Nacional Simão Mendes", cronicas: ["Insuficiência renal"], alergias: ["Ibuprofeno"], seguimento: "critico" },
+    { id: "pac-6", niss: "GW-PAC-0004107", name: "Ibrahima Cissé", sexo: "M", idade: 9, sangue: "A-", localidade: "Bissau — Quelele", unidade: "Centro de Saúde de Quelele", cronicas: [], alergias: ["Amoxicilina"], seguimento: "estavel" },
+    { id: "pac-7", niss: "GW-PAC-0004108", name: "Celina Oliveira", sexo: "F", idade: 41, sangue: "O+", localidade: "Bolama", unidade: "Hospital Regional de Bolama", cronicas: ["Asma"], alergias: ["ASPIRINA"], seguimento: "seguimento" },
+    { id: "pac-8", niss: "GW-PAC-0004109", name: "Nháte Có", sexo: "F", idade: 3, sangue: "B-", localidade: "Cacheu", unidade: "Centro de Saúde de Cacheu", cronicas: ["Desnutrição moderada"], alergias: [], seguimento: "seguimento" },
+    { id: "pac-9", niss: "GW-PAC-0004110", name: "Manuel Pereira", sexo: "M", idade: 47, sangue: "O+", localidade: "Bissau — Sololol", unidade: "Hospital Nacional Simão Mendes", cronicas: ["Hipertensão"], alergias: [], seguimento: "seguimento" },
+    { id: "pac-10", niss: "GW-PAC-0004111", name: "Fatumata Baldé", sexo: "F", idade: 22, sangue: "A+", localidade: "Gabú", unidade: "Hospital Regional de Gabú", cronicas: [], alergias: [], seguimento: "estavel" },
+  ],
+  medicos: [
+    { id: "med-1", name: "Doutora Helena Costa", specialty: "Clínica Geral", unidade: "Hospital Nacional Simão Mendes", telefone: "+245 955 12 34 01", disponivel: true },
+    { id: "med-2", name: "Doutor Iúri Tavares", specialty: "Pediatria", unidade: "Centro de Saúde de Bissau", telefone: "+245 955 12 34 02", disponivel: true },
+    { id: "med-3", name: "Doutor Umaro Baldé", specialty: "Infectologia", unidade: "Hospital Nacional Simão Mendes", telefone: "+245 955 12 34 03", disponivel: true },
+    { id: "med-4", name: "Doutora Nanci Fernandes", specialty: "Obstetrícia", unidade: "Hospital Regional de Bafatá", telefone: "+245 955 12 34 04", disponivel: false },
+    { id: "med-5", name: "Doutor José Gomes", specialty: "Cardiologia", unidade: "Hospital Nacional Simão Mendes", telefone: "+245 955 12 34 05", disponivel: true },
+    { id: "med-6", name: "Enfermeira Binta Djata", specialty: "Saúde Pública", unidade: "Centro de Saúde de Quelele", telefone: "+245 955 12 34 06", disponivel: true },
+  ],
+  consultas: [
+    { id: "cs-1", patientId: "pac-1", medicoId: "med-1", tipo: "presencial", data: daysAgo(2), motivo: "Seguimento de anemia", status: "realizada", tensao: "120/80", pulso: 76, temperatura: 36.6, triagem: "normal" },
+    { id: "cs-2", patientId: "pac-2", medicoId: "med-5", tipo: "teleconsulta", data: daysAgo(1), motivo: "Revisão da tensão arterial", status: "realizada", tensao: "165/100", pulso: 88, temperatura: 36.8, triagem: "alerta" },
+    { id: "cs-3", patientId: "pac-4", medicoId: "med-3", tipo: "presencial", data: daysAgo(3), motivo: "Febre e suspeita de malária", status: "realizada", tensao: "118/76", pulso: 92, temperatura: 38.4, triagem: "alerta" },
+    { id: "cs-4", patientId: "pac-5", medicoId: "med-1", tipo: "teleconsulta", data: daysAgo(4), motivo: "Controle da função renal", status: "realizada", tensao: "138/90", pulso: 81, temperatura: 36.4, triagem: "alerta" },
+    { id: "cs-5", patientId: "pac-3", medicoId: "med-2", tipo: "presencial", data: daysAgo(6), motivo: "Vacinação de rotina", status: "realizada", tensao: "—", pulso: 98, temperatura: 36.9, triagem: "normal" },
+    { id: "cs-6", patientId: "pac-7", medicoId: "med-1", tipo: "teleconsulta", data: daysAgo(1), motivo: "Crise de asma ligeira", status: "realizada", tensao: "122/82", pulso: 96, temperatura: 37.1, triagem: "alerta" },
+    { id: "cs-7", patientId: "pac-9", medicoId: "med-5", tipo: "presencial", data: daysAgo(0), motivo: "Eletrocardiograma de rotina", status: "agendada" },
+    { id: "cs-8", patientId: "pac-10", medicoId: "med-6", tipo: "teleconsulta", data: daysAgo(1), motivo: "Consulta pré-natal", status: "realizada", tensao: "115/75", pulso: 84, temperatura: 36.7, triagem: "normal" },
+    { id: "cs-9", patientId: "pac-6", medicoId: "med-2", tipo: "presencial", data: daysAgo(0), motivo: "Seguimento de otite", status: "agendada" },
+    { id: "cs-10", patientId: "pac-8", medicoId: "med-6", tipo: "presencial", data: daysAgo(5), motivo: "Controlo nutricional", status: "realizada", tensao: "—", pulso: 102, temperatura: 36.5, triagem: "normal" },
+  ],
+  vacinas: [
+    { id: "vac-1", patientId: "pac-3", nome: "Pentavalente", dose: "3.ª dose", data: daysAgo(40), unidade: "Centro de Saúde de Bissau" },
+    { id: "vac-2", patientId: "pac-3", nome: "Rotavírus", dose: "2.ª dose", data: daysAgo(40), unidade: "Centro de Saúde de Bissau" },
+    { id: "vac-3", patientId: "pac-6", nome: "SRP (Sarampo-Rubéola)", dose: "1.ª dose", data: daysAgo(120), unidade: "Centro de Saúde de Quelele" },
+    { id: "vac-4", patientId: "pac-8", nome: "BCG", dose: "Dose única", data: daysAgo(18), unidade: "Centro de Saúde de Cacheu" },
+    { id: "vac-5", patientId: "pac-8", nome: "Poliomielite (VOPb)", dose: "1.ª dose", data: daysAgo(18), unidade: "Centro de Saúde de Cacheu" },
+    { id: "vac-6", patientId: "pac-10", nome: "Febre Amarela", dose: "Dose única", data: daysAgo(90), unidade: "Hospital Regional de Gabú" },
+    { id: "vac-7", patientId: "pac-1", nome: "COVID-19", dose: "Reforço", data: daysAgo(300), unidade: "Hospital Nacional Simão Mendes" },
+    { id: "vac-8", patientId: "pac-4", nome: "Febre Amarela", dose: "Dose única", data: daysAgo(200), unidade: "Hospital Regional de Bafatá" },
+  ],
+  medicamentos: [
+    { id: "med-ct", name: "Coartem 20/120 mg (artemeter-lumefantrina)", categoria: "Antimaláricos", stock: 1240, stockMinimo: 400, custo: 850 },
+    { id: "med-sro", name: "Sais de reidratação oral (SRO)", categoria: "Hidratação", stock: 3120, stockMinimo: 800, custo: 120 },
+    { id: "med-amx", name: "Amoxicilina 500 mg", categoria: "Antibióticos", stock: 980, stockMinimo: 500, custo: 640 },
+    { id: "med-lzn", name: "Losartana 50 mg", categoria: "Cardiovascular", stock: 260, stockMinimo: 300, custo: 980 },
+    { id: "med-ins", name: "Insulina NPH 100 UI", categoria: "Endocrinologia", stock: 74, stockMinimo: 120, custo: 2400 },
+    { id: "med-sfp", name: "Sulfadoxina-pirimetamina (IPTp)", categoria: "Saúde materna", stock: 1560, stockMinimo: 600, custo: 220 },
+    { id: "med-vit", name: "Vitamina A (suplemento)", categoria: "Nutrição", stock: 2100, stockMinimo: 700, custo: 95 },
+    { id: "med-svb", name: "Soro fisiológico 500 ml", categoria: "Hidratação", stock: 850, stockMinimo: 400, custo: 380 },
+    { id: "med-bzl", name: "Benzilpenicilina 1,2 MUI", categoria: "Antibióticos", stock: 340, stockMinimo: 250, custo: 540 },
+    { id: "med-zinc", name: "Zinco 20 mg (diarreia)", categoria: "Nutrição", stock: 1750, stockMinimo: 500, custo: 150 },
+  ],
+  surtos: [
+    { id: "st-1", doenca: "Cólera", regiao: "Bafatá", casos: 214, suspeitos: 38, situacao: "ativo", tendencia: "subida", ultimoUpdate: daysAgo(1) },
+    { id: "st-2", doenca: "Malária", regiao: "Gabú", casos: 1860, suspeitos: 220, situacao: "ativo", tendencia: "estavel", ultimoUpdate: daysAgo(2) },
+    { id: "st-3", doenca: "Dengue", regiao: "Bissau", casos: 42, suspeitos: 17, situacao: "monitorado", tendencia: "descida", ultimoUpdate: daysAgo(3) },
+    { id: "st-4", doenca: "Sarampo", regiao: "Cacheu", casos: 12, suspeitos: 5, situacao: "controlado", tendencia: "descida", ultimoUpdate: daysAgo(6) },
+    { id: "st-5", doenca: "Febre de Lassa", regiao: "Bolama", casos: 3, suspeitos: 8, situacao: "monitorado", tendencia: "subida", ultimoUpdate: daysAgo(0) },
+  ],
+  config: {
+    prontuarioUnico: true,
+    telemedicina: true,
+    alertaSurtos: true,
+    stockCritico: true,
+    carteiraVacinacao: true,
+  },
+};

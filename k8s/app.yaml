@@ -1,0 +1,174 @@
+# ============================================================
+# GW Digital Company — Kubernetes (Módulo 12)
+# Aplicar: kubectl apply -k k8s/
+# ============================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gwdc
+  labels:
+    app.kubernetes.io/part-of: gwdc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gwdc-web
+  namespace: gwdc
+  labels:
+    app: gwdc-web
+spec:
+  replicas: 3
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: gwdc-web
+  template:
+    metadata:
+      labels:
+        app: gwdc-web
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 1001
+      containers:
+        - name: web
+          image: ghcr.io/gwdc/gw-digital-platform:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: NEXT_PUBLIC_SITE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gwdc-config
+                  key: site-url
+          envFrom:
+            - secretRef:
+                name: gwdc-secrets
+                optional: true
+          resources:
+            requests:
+              cpu: 200m
+              memory: 384Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gwdc-web
+  namespace: gwdc
+spec:
+  type: ClusterIP
+  selector:
+    app: gwdc-web
+  ports:
+    - port: 80
+      targetPort: 3000
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gwdc-config
+  namespace: gwdc
+data:
+  site-url: "https://gwdigital.company"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gwdc-secrets
+  namespace: gwdc
+type: Opaque
+stringData:
+  # Em produção: substituir por valores reais via sops/sealed-secrets
+  DATABASE_URL: "postgresql://gwdc:change-me@postgres.gwdc.svc.cluster.local:5432/gwdc"
+  REDIS_URL: "redis://redis.gwdc.svc.cluster.local:6379"
+  MONGODB_URL: "mongodb://mongodb.gwdc.svc.cluster.local:27017/gwdc"
+  RABBITMQ_URL: "amqp://guest:guest@rabbitmq.gwdc.svc.cluster.local:5672"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gwdc-web
+  namespace: gwdc
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - gwdigital.company
+      secretName: gwdc-tls
+  rules:
+    - host: gwdigital.company
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gwdc-web
+                port:
+                  number: 80
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: gwdc-web
+  namespace: gwdc
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gwdc-web
+  minReplicas: 3
+  maxReplicas: 12
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 65
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gwdc-web
+  namespace: gwdc
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: gwdc-web

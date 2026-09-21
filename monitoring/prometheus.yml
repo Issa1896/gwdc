@@ -1,0 +1,10 @@
+# GWDC — coleta de métricas Prometheus (Módulo 12)
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "gwdc-web"
+    metrics_path: /api/metrics
+    static_configs:
+      - targets: ["web:3000"]

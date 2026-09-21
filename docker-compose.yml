@@ -1,0 +1,139 @@
+# ============================================================
+# GW Digital Company — Docker Compose (ambiente de produção/paridade)
+# Plataforma Next.js + serviços enterprise (Módulo 12)
+# Uso: docker compose up -d  ·  Parar: docker compose down
+# Logs: docker compose logs -f
+# ============================================================
+
+name: gwdc
+
+services:
+  # ── Aplicação principal (website + MVPs) ──────────────────
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gwdc-web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost}
+    depends_on:
+      - postgres
+      - redis
+    expose:
+      - "3000"
+    networks: [gwdc]
+
+  # ── API Gateway (NGINX) ───────────────────────────────────
+  gateway:
+    image: nginx:1.27-alpine
+    container_name: gwdc-gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web
+    networks: [gwdc]
+
+  # ── Banco relacional (dados estruturais) ──────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: gwdc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gwdc}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gwdc_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-gwdc}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [gwdc]
+
+  # ── Banco de documentos (dados não-estruturados) ──────────
+  mongodb:
+    image: mongo:7
+    container_name: gwdc-mongodb
+    restart: unless-stopped
+    volumes:
+      - mongodata:/data/db
+    networks: [gwdc]
+
+  # ── Cache e filas em memória ──────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: gwdc-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    networks: [gwdc]
+
+  # ── Mensageria (eventos e integrações) ────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: gwdc-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "15672:15672" # painel de gestão (login: guest/guest)
+    networks: [gwdc]
+
+  # ── Busca e logs (Elasticsearch + Kibana) ─────────────────
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+    container_name: gwdc-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks: [gwdc]
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.14.3
+    container_name: gwdc-kibana
+    restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks: [gwdc]
+
+  # ── Monitoramento (Prometheus + Grafana) ──────────────────
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: gwdc-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks: [gwdc]
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: gwdc-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    networks: [gwdc]
+
+volumes:
+  pgdata:
+  mongodata:
+  redisdata:
+  esdata:
+
+networks:
+  gwdc:
+    driver: bridge

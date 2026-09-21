@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Tipografia */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-sora), var(--font-inter), ui-sans-serif, sans-serif;
+
+  /* Paleta GWDC — Módulo 1 (Guia de Identidade Visual) */
+  --color-brand-50: #eafaf6;
+  --color-brand-100: #cdf3e9;
+  --color-brand-200: #9ce7d6;
+  --color-brand-300: #5fd4bc;
+  --color-brand-400: #2dbda3;
+  --color-brand-500: #0b9e8a;
+  --color-brand-600: #078372;
+  --color-brand-700: #08685c;
+  --color-brand-800: #0a534a;
+  --color-brand-900: #0b453e;
+  --color-brand-950: #032723;
+
+  --color-navy-50: #f0f5fb;
+  --color-navy-100: #dce7f3;
+  --color-navy-200: #c0d4e9;
+  --color-navy-300: #94b6da;
+  --color-navy-400: #6192c7;
+  --color-navy-500: #3e75b2;
+  --color-navy-600: #2d5c96;
+  --color-navy-700: #274a7a;
+  --color-navy-800: #234066;
+  --color-navy-900: #1a3050;
+  --color-navy-950: #0b1b34;
+
+  --color-gold-50: #fdf9eb;
+  --color-gold-100: #f9efc9;
+  --color-gold-200: #f3dd8e;
+  --color-gold-300: #edc653;
+  --color-gold-400: #e7ad28;
+  --color-gold-500: #d79114;
+  --color-gold-600: #bb700e;
+  --color-gold-700: #95500f;
+  --color-gold-800: #7c4013;
+  --color-gold-900: #6a3514;
+
+  /* Tokens semânticos (tema claro) — sobrescritos em .dark */
+  --color-surface: #ffffff;
+  --color-surface-alt: #f5f8fb;
+  --color-surface-strong: #e9eff6;
+  --color-border: #dde6ef;
+  --color-border-strong: #c3d1df;
+  --color-ink: #0b1b34;
+  --color-ink-muted: #52637c;
+  --color-ink-faint: #8494ab;
+  --color-primary: #0b9e8a;
+  --color-primary-strong: #078372;
+  --color-on-primary: #ffffff;
+  --color-accent: #d79114;
+  --color-danger: #dc2626;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-info: #2563eb;
+
+  --shadow-card: 0 1px 2px rgb(11 27 52 / 0.05), 0 8px 24px -12px rgb(11 27 52 / 0.12);
+  --shadow-card-hover: 0 2px 4px rgb(11 27 52 / 0.06), 0 16px 40px -12px rgb(11 27 52 / 0.2);
+
+  --animate-fade-up: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-marquee: marquee 40s linear infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+.dark {
+  --color-surface: #0a1526;
+  --color-surface-alt: #0d1a30;
+  --color-surface-strong: #13243f;
+  --color-border: #1c3050;
+  --color-border-strong: #2a4166;
+  --color-ink: #e9eff7;
+  --color-ink-muted: #93a5bd;
+  --color-ink-faint: #64788f;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px -12px rgb(0 0 0 / 0.5);
+  --shadow-card-hover: 0 2px 4px rgb(0 0 0 / 0.4), 0 20px 48px -12px rgb(0 0 0 / 0.6);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-surface text-ink antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    @apply bg-brand-500/25;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-strong) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@utility text-gradient {
+  @apply bg-gradient-to-r from-brand-500 via-brand-400 to-gold-400 bg-clip-text text-transparent;
+}
+
+@utility bg-grid {
+  background-image: linear-gradient(to right, var(--color-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-border) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+@utility mask-fade-b {
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+/* Acessibilidade: respeita preferência por movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
