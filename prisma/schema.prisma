@@ -1,0 +1,234 @@
+// Prisma Schema para a Plataforma Digital Soberana da Guiné-Bissau (GWDC)
+// Documentação: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --------------------------------------------------------
+// 1. IDENTIDADE, AUTENTICAÇÃO E CIDADANIA (GovTech / Infra)
+// --------------------------------------------------------
+
+enum UserRole {
+  ADMIN
+  GESTOR_PUBLICO
+  SERVIDOR
+  JUIZ
+  MEDICO
+  PROFESSOR
+  OPERADOR_COMERCIAL
+  CIDADAO
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         UserRole  @default(CIDADAO)
+  organ        String?   // Ex: Ministério das Finanças, Supremo Tribunal, etc.
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  protocols    Protocol[]
+
+  @@map("users")
+}
+
+model Citizen {
+  id                String         @id @default(uuid())
+  nin               String         @unique // Número de Identificação Nacional (ex: GW-2026-XXXX)
+  fullName          String
+  birthDate         DateTime
+  birthplace        String         // Bissau, Bafatá, Gabú, Bolama, etc.
+  gender            String
+  biometricEnrolled Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  protocols         Protocol[]
+  healthRecords     HealthRecord[]
+
+  @@map("citizens")
+}
+
+model Protocol {
+  id          String   @id @default(uuid())
+  number      String   @unique // ex: PROT-2026-XXXX
+  citizenId   String?
+  userId      String?
+  organ       String   // Ministério ou Órgão de destino
+  subject     String
+  status      String   @default("EM_ANALISE") // EM_ANALISE, DEFERIDO, INDEFERIDO, CONCLUIDO
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  citizen     Citizen? @relation(fields: [citizenId], references: [id], onDelete: SetNull)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("protocols")
+}
+
+// --------------------------------------------------------
+// 2. JUSTIÇA & SAÚDE PÚBLICA (GW Justice & GW Health)
+// --------------------------------------------------------
+
+model CourtProcess {
+  id            String   @id @default(uuid())
+  processNumber String   @unique // ex: PJE-2026-TRB-XXXX
+  court         String   // Tribunal Regional de Bissau, Supremo Tribunal, etc.
+  plaintiff     String   // Autor
+  defendant     String   // Réu
+  subject       String
+  status        String   @default("DISTRIBUIDO") // DISTRIBUIDO, INSTRUCAO, JULGADO
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("court_processes")
+}
+
+model HealthRecord {
+  id          String   @id @default(uuid())
+  citizenId   String
+  doctorName  String
+  hospital    String   // Hospital Nacional Simão Mendes, etc.
+  diagnosis   String
+  treatment   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  citizen     Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+
+  @@map("health_records")
+}
+
+// --------------------------------------------------------
+// 3. FINANÇAS & PAGAMENTOS (GW Bank & GW Pay)
+// --------------------------------------------------------
+
+model FinancialAccount {
+  id            String                 @id @default(uuid())
+  accountNumber String                 @unique
+  holderName    String
+  balanceFCFA   Decimal                @default(0) @db.Decimal(18, 2)
+  status        String                 @default("ACTIVE")
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  transactions  FinancialTransaction[]
+
+  @@map("financial_accounts")
+}
+
+model FinancialTransaction {
+  id             String           @id @default(uuid())
+  accountId      String
+  type           String           // TRANSFER, QR_PAYMENT, DEPOSIT, WITHDRAWAL
+  amountFCFA     Decimal          @db.Decimal(18, 2)
+  qrCodePayload  String?
+  status         String           @default("COMPLETED")
+  createdAt      DateTime         @default(now())
+
+  account        FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("financial_transactions")
+}
+
+// --------------------------------------------------------
+// 4. GESTÃO EMPRESARIAL & VAREJO (GW ERP & GW POS)
+// --------------------------------------------------------
+
+model Sale {
+  id            String   @id @default(uuid())
+  saleNumber    String   @unique
+  customerNif   String?
+  totalFCFA     Decimal  @db.Decimal(18, 2)
+  igvFCFA       Decimal  @db.Decimal(18, 2) // Imposto Geral sobre Vendas (19%)
+  paymentMethod String   // GW_PAY_QR, CASH, CARD
+  status        String   @default("EMITTED")
+  createdAt     DateTime @default(now())
+
+  @@map("sales")
+}
+
+// --------------------------------------------------------
+// 5. EDUCAÇÃO BÁSICA & COMERCIAL (GW School & GW Business)
+// --------------------------------------------------------
+
+model Student {
+  id               String   @id @default(uuid())
+  enrollmentNumber String   @unique // ex: ESC-2026-XXX
+  fullName         String
+  classroom        String   // Ex: 3º Ano A
+  gradeAverage     Decimal  @default(0) @db.Decimal(4, 2) // 0 a 20
+  attendancePct    Int      @default(100)
+  hasSchoolLunch   Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("students")
+}
+
+model Lead {
+  id             String   @id @default(uuid())
+  title          String
+  companyName    String
+  valueFCFA      Decimal  @db.Decimal(18, 2)
+  stage          String   @default("lead") // lead, qualificacao, proposta, negociacao, ganho, perdido
+  representative String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("leads")
+}
+
+// --------------------------------------------------------
+// 6. CIBERSEGURANÇA, CLIMA & DADOS ABERTOS (GW Security, Climate, Open Data)
+// --------------------------------------------------------
+
+model SecurityIncident {
+  id          String   @id @default(uuid())
+  code        String   @unique // ex: INC-2026-XXX
+  title       String
+  target      String
+  severity    String   // baixa, media, alta, critica
+  sourceIp    String
+  status      String   @default("detectado") // detectado, analise, contido, resolvido
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("security_incidents")
+}
+
+model ClimateAlert {
+  id               String   @id @default(uuid())
+  code             String   @unique // ex: ALT-2026-XXX
+  title            String
+  severity         String
+  region           String
+  messagePt        String
+  messageCrioulo   String
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  @@map("climate_alerts")
+}
+
+model OpenDataset {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  title       String
+  organ       String
+  category    String
+  formats     String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("open_datasets")
+}
